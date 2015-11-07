@@ -1,6 +1,6 @@
 // config/product-db.js
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://api-users:apiUsers!01@ds051534.mongolab.com:51534/rest-api-db');
+mongoose.connect('mongodb://adminDb:@dm!nDb!01@ds031591.mongolab.com:31591/products-db');
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection "Product" error'));
 db.once('open', function (callback) {
