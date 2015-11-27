@@ -11,8 +11,8 @@ var bodyParser   = require('body-parser');
 //npm install -g node-gyp ?? apparement fait fonctionner le plugin suite au probleme de BSON
 
 // mongo connect databases
-var dbUsers = require('./database/config/users-db.js');
-var dbProduct = require('./database/config/product-db.js');
+var dbUsers = require('./database/users-db.js');
+var dbProduct = require('./database/product-db.js');
 
 // require('./server/libs/btSerial');
 
