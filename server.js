@@ -1,32 +1,49 @@
-// set up ========================
+// set up ======================================================================
 var express  = require('express');
-var app = express();                              // create our app w/ express
-var mongoose = require('mongoose');                     // mongoose for mongodb
-var morgan   = require('morgan');             // log requests to the console (express4)
-var http     = require('http');
-var url      = require('url');
-var bodyParser = require('body-parser');   // pull information from HTML POST (express4)
+var app = express();
+var mongoose = require('mongoose');
+var morgan = require('morgan'); // log requests to the console (express4)
+var http = require('http');
+var url = require('url');
+var bodyParser = require('body-parser'); // pull information from HTML POST (express4)
 var cookieParser = require('cookie-parser');
-var bodyParser   = require('body-parser');
-//npm install -g node-gyp ?? apparement fait fonctionner le plugin suite au probleme de BSON
+var bodyParser = require('body-parser');
+var passport = require('passport');
+var BearerStrategy = require('passport-http-bearer').Strategy;
+var jwt = require('jwt-simple');
 
-// mongo connect databases
-var dbUsers = require('./database/users-db.js');
-var dbProduct = require('./database/product-db.js');
+//mongo connect ================================================================
+var options = {
+  // db: { native_parser: true },
+  server: { poolSize: 1 },
+  // replset: { rs_name: 'myReplicaSetName' },
+  // user: 'myUserName',
+  // pass: 'myPassword'
+}
+mongoose.connect('localhost:27017/db', options); // connect to our database
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection db error:'));
+db.once('open', function (callback) {
+	console.log('connection db ok')
+	// mongoose.connection.close(function () {
+	//   console.log('Mongoose disconnected on app termination');
+	//   process.exit(0);
+	// });
+});
 
-// require('./server/libs/btSerial');
+//passport config ===============================================================
+require('./server/config/passport')(passport, jwt);
 
-// configuration ==============================================================
-app.use(morgan('dev'));                                         // log every request to the console
-//app.use(bodyParser.urlencoded({'extended':'true'}));            // parse application/x-www-form-urlencoded
-app.use(bodyParser.json());                                     // parse application/json
-app.use(cookieParser()); // read cookies (needed for auth)
+// configuration ===============================================================
+app.use(morgan('dev')); // log every request to the console
+app.use(bodyParser.json()); // parse application/json
+app.use(cookieParser()); // read cookies
 
-//routes app ======================================
-require('./routers/routes')(app);
+// routes app ==================================================================
+require('./routers/routes')(app, passport, jwt);
 
-// listen (start app with node server.js) ======================================
-/*var server = http.createServer(app).listen(9000, function (request, response) {
-    console.log('listening on port 9000');
-});*/
+// start serveur ===============================================================
 app.listen(9999);
+app.on('disconnect', function() {
+    console.log("disconnect");
+});
