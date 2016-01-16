@@ -1,19 +1,10 @@
 var mongoose = require('mongoose');
 var ContractsSchema = new mongoose.Schema({
-  id_customer: String,
   contract_list: [{
-    id_contract: String,
-    provider: String,
-    month_term: Number,
+    id_provider: String,
     create_date : { type: Date, default: Date.now },
     start_date: { type: Date },
-    end_date: { type: Date },
-    modules: [{
-      id: String,
-      types: [{
-        id: String,
-      }]
-    }]
+    end_date: { type: Date }
   }]
 });
 

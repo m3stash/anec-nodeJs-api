@@ -4,11 +4,41 @@ var Customers = require('../models/customers');
 var Providers = require('../models/providers');
 var Users = require('../models/users');
 var Modules = require('../models/modules');
+var Modules_type = require('../models/modules_type');
 var Contracts = require('../models/contracts');
+var Country = require('../models/country');
+var District = require('../models/district');
+var ModulesByDistrict = require('../models/modulesByDistrict');
 
 module.exports = function(app, passport, jwt){
 
-	//login
+	app.get('/rest-api/country/read', passport.authenticate('bearer', { session: false }),
+		function(req, res) {
+			Country.find({}, {'_id': 0}, function(err, country){
+				if(country !== null){
+					res.status(200).send({'countryList' : country});
+				}
+			});
+		}
+	);
+
+	app.get('/rest-api/district', passport.authenticate('bearer', { session: false }),
+		function(req, res) {
+			var id_country = parseInt(req.body.id_country);
+			if(isNaN(id_country) === false){
+				District.find({'id_country': id_country}, {'_id': 0, 'id_country': 0}, function(err, district){
+					console.log('DISTRICT',district)
+					if(district !== null){
+						console.log('XXXX',district)
+						res.status(200).send({'districtList': district});
+					}
+				});
+			}else{
+				res.status(400).send('error id_country must be a Number');
+			}
+		}
+	);
+
 	app.post('/rest-api/login', function(req, res) {
 		Users.findOne({login: req.body.login, pwd: req.body.password}, function (err, users) {
 		  if (users === null){
@@ -44,17 +74,44 @@ module.exports = function(app, passport, jwt){
 		});
 	});
 
-	//modules
-	app.get('/rest-api/modules/read', passport.authenticate('bearer', { session: false }),
+	app.post('/rest-api/modulesByDistrict', passport.authenticate('bearer', { session: false }),
+		function(req, res) {
+			// ModulesByDistrict.save(obj);
+			}
+	);
+
+	app.get('/rest-api/modules/:id/modules_type', passport.authenticate('bearer', { session: false }),
+		function(req, res) {
+			var idModule = req.params.id;
+			Modules_type.find({'id': idModule}, {'_id': 0, '__v': 0}, function(err, moduleType){
+				res.status(200).send({'moduleTypeList': moduleType});
+			});
+		}
+	);
+
+	app.get('/rest-api/modules', passport.authenticate('bearer', { session: false }),
 	  function(req, res) {
+			Modules.find({}, {'_id': 0, '__v': 0}, function(err, modules){
+				res.status(200).send({'modulesList': modules});
+			});
+			// Customers.findOne({'id_customer': req.user.id_customer}, function (err, customer){
+			// 	console.log('lala',customer);
+			// 	var countryId = customer.address.country.id;
+			// 	var provinceId = customer.address.province.id;
+			// 	ModulesByDistrict.findOne({'country.id':countryId}, function(err, modules){
+			// 		console.log('t',modules)
+			// 	});
+			// });
+
+
 			//on récupère la liste des contracts par rapport au id_customers du user
-			Contracts.findOne({'id_customer':req.user.id_customer}, function(err, contract){
+			/*Contracts.findOne({'id_customer':req.user.id_customer}, function(err, contract){
 				if(err){
 					res.status(500).send({error: "problème serveur la requete des modules n'a pas aboutie"});
 				};
 				if(contract !== null){
 					var modulesListId = [];
-					var found = false;
+					var found = false;x
 					//liste des contracts
 					for(var i = 0; i < contract.contract_list.length; i++){
 						var list = contract.contract_list[i];
@@ -88,7 +145,7 @@ module.exports = function(app, passport, jwt){
 				}else{
 					res.status(500).send({error: "aucun contract existant"});
 				}
-			})
+			})*/
 		}
 	);
 
@@ -145,20 +202,11 @@ module.exports = function(app, passport, jwt){
 				// 		}]
 				// 	}]
 				// }];
-				obj.id_customer = "CUS_001",
 				obj.contract_list = [{
-					id_contract : "CTN_002",
-					provider: "PRO_002",
-					month_term: "6",
+					id_provider: "PRO_002",
 					create_date: "Mon Jan 01 2015 00:00:00 GMT+0100 (CET)",
 					start_date: "Mon Jan 01 2015 00:00:00 GMT+0100 (CET)",
 					end_date: "Mon Jan 01 2016 23:59:59 GMT+0100 (CET)",
-					modules: [{
-						id: "MOD_001",
-						types: [{
-							id: "MDT_002"
-						}]
-					}]
 				}];
 				obj.save(function(err){
 						if(err){

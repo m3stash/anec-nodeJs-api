@@ -43,12 +43,18 @@ var CustomersSchema = new mongoose.Schema({
     }
   },
   address : {
-      country : String,
-      region: String,
-      add1 : String,
-      add2 : String,
-      zip : String,
-      city : String
+    country : {
+      id : Number,
+      name : String
+    },
+    province : {
+      id : Number,
+      name : String
+    },
+    add1 : String,
+    add2 : String,
+    zip : String,
+    city : String
   }
 });
 
