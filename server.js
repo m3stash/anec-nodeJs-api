@@ -11,6 +11,7 @@ var bodyParser = require('body-parser');
 var passport = require('passport');
 var BearerStrategy = require('passport-http-bearer').Strategy;
 var jwt = require('jwt-simple');
+global._ = require('underscore');
 
 //mongo connect ================================================================
 var options = {

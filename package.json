@@ -16,7 +16,8 @@
     "cookie-parser": "latest",
     "passport": "latest",
     "passport-http-bearer": "latest",
-    "jwt-simple": "latest"
+    "jwt-simple": "latest",
+    "underscore": "latest"
   },
   "engines": {
     "node": "node >= 5.0.0"

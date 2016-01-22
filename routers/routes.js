@@ -10,6 +10,15 @@ var Country = require('../models/country');
 var District = require('../models/district');
 var ModulesByDistrict = require('../models/modulesByDistrict');
 
+//if params is null or undefined or "" : return true
+fnUndefinedOrNull = function(param){
+	if((_.isUndefined(param) || _.isNull(param)) === true){
+		return true;
+	}else{
+		return false;
+	}
+}
+
 module.exports = function(app, passport, jwt){
 
 	app.get('/rest-api/country/read', passport.authenticate('bearer', { session: false }),
@@ -80,12 +89,60 @@ module.exports = function(app, passport, jwt){
 			}
 	);
 
-	app.get('/rest-api/modules/:id/modules_type', passport.authenticate('bearer', { session: false }),
+	app.get('/rest-api/modules/:id/modules_type/:idModType?', passport.authenticate('bearer', { session: false }),
 		function(req, res) {
 			var idModule = req.params.id;
-			Modules_type.find({'id': idModule}, {'_id': 0, '__v': 0}, function(err, moduleType){
-				res.status(200).send({'moduleTypeList': moduleType});
-			});
+			var idModType = req.params.idModType;
+			if(idModule === null){
+				res.status(500).send({error: 'id module must be not null'});
+			}else{
+				/*
+					if idModType is not null : get single moduleType
+					if idModType is null : get all moduleType
+				*/
+				if(idModType !== null){
+					Modules_type.find({'id': idModule}, {'_id': 0, '__v': 0}, function(err, moduleType){
+						res.status(200).send({'moduleTypeList': moduleType});
+					});
+				}else{
+					Modules_type.find({}, {'_id': 0, '__v': 0}, function(err, moduleType){
+						res.status(200).send({'moduleTypeList': moduleType});
+					});
+				}
+			}
+		}
+	);
+
+	//post module_type
+	app.post('/rest-api/modules/:id/modules_type', passport.authenticate('bearer', { session: false }),
+		function(req, res) {
+			var idModule = req.params.id;
+			if(idModule === null){
+				res.status(500).send({error: 'ID module must be not null'});
+			}else{
+				if(fnUndefinedOrNull(req.body.name) || fnUndefinedOrNull(req.body.id) === true){
+					res.status(500).send({error: 'Property id and name must be not null'});
+				}else{
+					Modules_type.find({'id': req.body.id}, {'_id': 0, '__v': 0}, function(err, moduleType){
+						if(_.isEmpty(moduleType)){
+							//create new entry
+							var module_type = new Modules_type();
+							module_type.idModule = idModule;
+							module_type.id = req.body.id;
+							module_type.name = req.body.name;
+							module_type.save(function(err) {
+								if(err){
+									res.status(500).send({error: 'Error server creation new modules_type'});
+								}else{
+									res.status(200).send({message: 'Creation new modules_type succes'});
+								}
+							});
+						}else{
+							res.status(500).send({error: 'module_type already existe'});
+						}
+					})
+				}
+			}
 		}
 	);
 
