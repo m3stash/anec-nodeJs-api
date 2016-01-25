@@ -89,6 +89,7 @@ module.exports = function(app, passport, jwt){
 			}
 	);
 
+	//get module_type
 	app.get('/rest-api/modules/:id/modules_type/:idModType?', passport.authenticate('bearer', { session: false }),
 		function(req, res) {
 			var idModule = req.params.id;
@@ -98,14 +99,14 @@ module.exports = function(app, passport, jwt){
 			}else{
 				/*
 					if idModType is not null : get single moduleType
-					if idModType is null : get all moduleType
+					if idModType is null or undefined : get all moduleType
 				*/
-				if(idModType !== null){
-					Modules_type.find({'id': idModule}, {'_id': 0, '__v': 0}, function(err, moduleType){
+				if(!fnUndefinedOrNull(idModType)){
+					Modules_type.findOne({'_id': idModType}, {'__v': 0}, function(err, moduleType){
 						res.status(200).send({'moduleTypeList': moduleType});
 					});
 				}else{
-					Modules_type.find({}, {'_id': 0, '__v': 0}, function(err, moduleType){
+					Modules_type.find({}, {'__v': 0}, function(err, moduleType){
 						res.status(200).send({'moduleTypeList': moduleType});
 					});
 				}
@@ -120,15 +121,14 @@ module.exports = function(app, passport, jwt){
 			if(idModule === null){
 				res.status(500).send({error: 'ID module must be not null'});
 			}else{
-				if(fnUndefinedOrNull(req.body.name) || fnUndefinedOrNull(req.body.id) === true){
+				if(fnUndefinedOrNull(req.body.name) === true){
 					res.status(500).send({error: 'Property id and name must be not null'});
 				}else{
-					Modules_type.find({'id': req.body.id}, {'_id': 0, '__v': 0}, function(err, moduleType){
+					Modules_type.find({'name': req.body.name}, {'__v': 0}, function(err, moduleType){
 						if(_.isEmpty(moduleType)){
 							//create new entry
 							var module_type = new Modules_type();
 							module_type.idModule = idModule;
-							module_type.id = req.body.id;
 							module_type.name = req.body.name;
 							module_type.save(function(err) {
 								if(err){
@@ -146,9 +146,26 @@ module.exports = function(app, passport, jwt){
 		}
 	);
 
+	//post module_type
+	app.delete('/rest-api/modules/:id/modules_type', passport.authenticate('bearer', { session: false }),
+		function(req, res) {
+			if(_.isArray(req.body) && req.body.length > 0){
+				Modules_type.remove({'_id': { $in: req.body }}, function (err) {
+		      if (err){
+						res.status(500).send({error: 'error server for delete item'});
+					}else{
+						res.status(200).send({message: 'item deleting success'});
+					}
+    		});
+			}else{
+				res.status(500).send({'error': 'the id list can\'t be null'});
+			}
+		}
+	);
+
 	app.get('/rest-api/modules', passport.authenticate('bearer', { session: false }),
 	  function(req, res) {
-			Modules.find({}, {'_id': 0, '__v': 0}, function(err, modules){
+			Modules.find({}, {'__v': 0}, function(err, modules){
 				res.status(200).send({'modulesList': modules});
 			});
 			// Customers.findOne({'id_customer': req.user.id_customer}, function (err, customer){

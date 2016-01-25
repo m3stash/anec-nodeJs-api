@@ -2,7 +2,6 @@ var mongoose = require('mongoose');
 
 var Modules_typeSchema = new mongoose.Schema({
   idModule: String,
-  id: String,
   name: String
 });
 
