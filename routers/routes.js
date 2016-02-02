@@ -114,51 +114,86 @@ module.exports = function(app, passport, jwt){
 		}
 	);
 
-	//post module_type
+	//POST module_type
 	app.post('/rest-api/modules/:id/modules_type', passport.authenticate('bearer', { session: false }),
 		function(req, res) {
 			var idModule = req.params.id;
-			if(idModule === null){
-				res.status(500).send({error: 'ID module must be not null'});
+			if(fnUndefinedOrNull(idModule)){
+				res.status(500).send('ID module must be not null');
 			}else{
-				if(fnUndefinedOrNull(req.body.name) === true){
-					res.status(500).send({error: 'Property id and name must be not null'});
+				if(fnUndefinedOrNull(req.body.name)){
+					res.status(500).send('Property id name');
 				}else{
 					Modules_type.find({'name': req.body.name}, {'__v': 0}, function(err, moduleType){
-						if(_.isEmpty(moduleType)){
-							//create new entry
-							var module_type = new Modules_type();
-							module_type.idModule = idModule;
-							module_type.name = req.body.name;
-							module_type.save(function(err) {
-								if(err){
-									res.status(500).send({error: 'Error server creation new modules_type'});
-								}else{
-									res.status(200).send({message: 'Creation new modules_type succes'});
-								}
-							});
+						if(err){
+							//res.status(500).send('Error server request db');
 						}else{
-							res.status(500).send({error: 'module_type already existe'});
+							if(_.isEmpty(moduleType)){
+								//create new entry
+								var module_type = new Modules_type();
+								module_type.idModule = idModule;
+								module_type.name = req.body.name;
+								module_type.save(function(err) {
+									if(err){
+										res.status(500).send('Error server');
+									}else{
+										res.status(200).send('Creation new modules_type succes');
+									}
+								});
+							}else{
+								//err module_type already exist
+								res.status(500).send('ERR_MDT_ADD_01');
+							}
 						}
-					})
+					});
 				}
 			}
 		}
 	);
 
-	//post module_type
+	//PUT module_type
+	app.put('/rest-api/modules/:id/modules_type/:idModType', passport.authenticate('bearer', { session: false }),
+		function(req, res) {
+			if(fnUndefinedOrNull(req.params.idModType)){
+				res.status(500).send({'error': 'the id_module can\'t be null'});
+			}else{
+				Modules_type.find({'name': req.body.name}, {'__v': 0}, function(err, moduleType){
+					if (err) {
+						res.status(500).send('error put module_type');
+					}else{
+						if(!_.isEmpty(moduleType)){
+							//if module_type name already exist
+							res.status(500).send('ERR_MDT_ADD_01');
+						}else{
+							Modules_type.findByIdAndUpdate(req.params.idModType, { $set: { name: req.body.name}}, {new: true}, function (err, test) {
+								if (err) {
+									res.status(500).send('error update module_type');
+								}else{
+									res.status(200).send({message :'SUCCESS_MDT_UPDATE'});
+								}
+							});
+						}
+					}
+				});
+			}
+		}
+	);
+
+	//DELETE module_type
 	app.delete('/rest-api/modules/:id/modules_type', passport.authenticate('bearer', { session: false }),
 		function(req, res) {
 			if(_.isArray(req.body) && req.body.length > 0){
 				Modules_type.remove({'_id': { $in: req.body }}, function (err) {
 		      if (err){
-						res.status(500).send({error: 'error server for delete item'});
+						//error save bdd
+						res.status(500).send('ERR_MDT_DEL_02');
 					}else{
-						res.status(200).send({message: 'item deleting success'});
+						res.status(200).send('SUCCESS');
 					}
     		});
 			}else{
-				res.status(500).send({'error': 'the id list can\'t be null'});
+				//the id list can't be null
+				res.status(500).send('ERR_MDT_DEL_01');
 			}
 		}
 	);
