@@ -21,33 +21,6 @@ fnUndefinedOrNull = function(param){
 
 module.exports = function(app, passport, jwt){
 
-	app.get('/rest-api/country/read', passport.authenticate('bearer', { session: false }),
-		function(req, res) {
-			Country.find({}, {'_id': 0}, function(err, country){
-				if(country !== null){
-					res.status(200).send({'countryList' : country});
-				}
-			});
-		}
-	);
-
-	app.get('/rest-api/district', passport.authenticate('bearer', { session: false }),
-		function(req, res) {
-			var id_country = parseInt(req.body.id_country);
-			if(isNaN(id_country) === false){
-				District.find({'id_country': id_country}, {'_id': 0, 'id_country': 0}, function(err, district){
-					console.log('DISTRICT',district)
-					if(district !== null){
-						console.log('XXXX',district)
-						res.status(200).send({'districtList': district});
-					}
-				});
-			}else{
-				res.status(400).send('error id_country must be a Number');
-			}
-		}
-	);
-
 	app.post('/rest-api/login', function(req, res) {
 		Users.findOne({login: req.body.login, pwd: req.body.password}, function (err, users) {
 		  if (users === null){
@@ -55,9 +28,10 @@ module.exports = function(app, passport, jwt){
 			} else {
 				var payload = { date: new Date().getTime() };
 				var secret = 'S3cret!Qu3st59';
-				var token_validity = 5000;
+				//validity 4 hours
+				var token_validity = 14400000;
 				var token_encoded = jwt.encode(payload, secret);
-				var token_expires_in = new Date().getTime() + token_validity
+				var token_expires_in = new Date().getTime() + token_validity;
 				var token = {
 					expire: token_expires_in,
 					token: token_encoded
@@ -72,8 +46,9 @@ module.exports = function(app, passport, jwt){
 							user.lastName = users.lastName;
 							user.firstName = users.firstName;
 							user.contact = users.contact;
+							user.isAdmin = users.userAdmin;
 							//console.log('save token ok', users);
-							res.status(200).send({
+							return res.status(200).send({
 								'token' : token.token,
 								'user' : user
 							});
@@ -83,6 +58,59 @@ module.exports = function(app, passport, jwt){
 		});
 	});
 
+	//country
+	app.get('/rest-api/logout', passport.authenticate('bearer', { session: false }),
+		function(req, res) {
+			Users.findOne({'_id' : req.user._id}, function(err, user){
+				if(fnUndefinedOrNull(user)){
+					return res.status(500).send('error server');
+				}
+				if(err){
+					//
+				}
+				user.token.expire = null;
+				user.token.token = null;
+				user.save(function(err){
+			    if(err){
+			    	//
+			    } else {
+						return res.status(200).send('logout');
+					}
+				});
+			});
+		}
+	);
+
+	//country
+	app.get('/rest-api/country/read', passport.authenticate('bearer', { session: false }),
+		function(req, res) {
+			Country.find({}, {'_id': 0}, function(err, country){
+				if(country !== null){
+					return res.status(200).send({'countryList' : country});
+				}
+			});
+		}
+	);
+
+	//district
+	app.get('/rest-api/district', passport.authenticate('bearer', { session: false }),
+		function(req, res) {
+			var id_country = parseInt(req.body.id_country);
+			if(isNaN(id_country) === false){
+				District.find({'id_country': id_country}, {'_id': 0, 'id_country': 0}, function(err, district){
+					console.log('DISTRICT',district)
+					if(district !== null){
+						console.log('XXXX',district)
+						return res.status(200).send({'districtList': district});
+					}
+				});
+			}else{
+				return res.status(400).send('error id_country must be a Number');
+			}
+		}
+	);
+
+	//modulesByDistrict
 	app.post('/rest-api/modulesByDistrict', passport.authenticate('bearer', { session: false }),
 		function(req, res) {
 			// ModulesByDistrict.save(obj);
@@ -95,7 +123,7 @@ module.exports = function(app, passport, jwt){
 			var idModule = req.params.id;
 			var idModType = req.params.idModType;
 			if(idModule === null){
-				res.status(500).send({error: 'id module must be not null'});
+				return res.status(500).send({error: 'id module must be not null'});
 			}else{
 				/*
 					if idModType is not null : get single moduleType
@@ -103,11 +131,11 @@ module.exports = function(app, passport, jwt){
 				*/
 				if(!fnUndefinedOrNull(idModType)){
 					Modules_type.findOne({'_id': idModType}, {'__v': 0}, function(err, moduleType){
-						res.status(200).send({'moduleTypeList': moduleType});
+						return res.status(200).send({'moduleTypeList': moduleType});
 					});
 				}else{
 					Modules_type.find({}, {'__v': 0}, function(err, moduleType){
-						res.status(200).send({'moduleTypeList': moduleType});
+						return res.status(200).send({'moduleTypeList': moduleType});
 					});
 				}
 			}
@@ -119,7 +147,7 @@ module.exports = function(app, passport, jwt){
 		function(req, res) {
 			var idModule = req.params.id;
 			if(fnUndefinedOrNull(idModule)){
-				res.status(500).send('ID module must be not null');
+				return res.status(500).send('ID module must be not null');
 			}else{
 				if(fnUndefinedOrNull(req.body.name)){
 					res.status(500).send('Property id name');
@@ -133,16 +161,17 @@ module.exports = function(app, passport, jwt){
 								var module_type = new Modules_type();
 								module_type.idModule = idModule;
 								module_type.name = req.body.name;
+								module_type.create_date = new Date();
 								module_type.save(function(err) {
 									if(err){
-										res.status(500).send('Error server');
+										return res.status(500).send('Error server');
 									}else{
-										res.status(200).send('Creation new modules_type succes');
+										return res.status(200).send('Creation new modules_type succes');
 									}
 								});
 							}else{
 								//err module_type already exist
-								res.status(500).send('ERR_MDT_ADD_01');
+								return res.status(500).send('ERR_MDT_ADD_01');
 							}
 						}
 					});
@@ -155,21 +184,22 @@ module.exports = function(app, passport, jwt){
 	app.put('/rest-api/modules/:id/modules_type/:idModType', passport.authenticate('bearer', { session: false }),
 		function(req, res) {
 			if(fnUndefinedOrNull(req.params.idModType)){
-				res.status(500).send({'error': 'the id_module can\'t be null'});
+				return res.status(500).send({'error': 'the id_module can\'t be null'});
 			}else{
 				Modules_type.find({'name': req.body.name}, {'__v': 0}, function(err, moduleType){
 					if (err) {
-						res.status(500).send('error put module_type');
+						return res.status(500).send('error put module_type');
 					}else{
 						if(!_.isEmpty(moduleType)){
 							//if module_type name already exist
-							res.status(500).send('ERR_MDT_ADD_01');
+							return res.status(500).send('ERR_MDT_ADD_01');
 						}else{
-							Modules_type.findByIdAndUpdate(req.params.idModType, { $set: { name: req.body.name}}, {new: true}, function (err, test) {
+							Modules_type.findByIdAndUpdate(req.params.idModType,
+									{ $set: { name: req.body.name, last_modif_date: new Date()}}, {new: true}, function (err, test) {
 								if (err) {
-									res.status(500).send('error update module_type');
+									return res.status(500).send('error update module_type');
 								}else{
-									res.status(200).send({message :'SUCCESS_MDT_UPDATE'});
+									return res.status(200).send({message :'SUCCESS_MDT_UPDATE'});
 								}
 							});
 						}
@@ -186,22 +216,26 @@ module.exports = function(app, passport, jwt){
 				Modules_type.remove({'_id': { $in: req.body }}, function (err) {
 		      if (err){
 						//error save bdd
-						res.status(500).send('ERR_MDT_DEL_02');
+						return res.status(500).send('ERR_MDT_DEL_02');
 					}else{
-						res.status(200).send('SUCCESS');
+						return res.status(200).send('SUCCESS');
 					}
     		});
 			}else{
 				//the id list can't be null
-				res.status(500).send('ERR_MDT_DEL_01');
+				return res.status(500).send('ERR_MDT_DEL_01');
 			}
 		}
 	);
 
+	//Module
 	app.get('/rest-api/modules', passport.authenticate('bearer', { session: false }),
 	  function(req, res) {
 			Modules.find({}, {'__v': 0}, function(err, modules){
-				res.status(200).send({'modulesList': modules});
+				if(err){
+					console.log(err)
+				}
+				return res.status(200).send({'modulesList': modules});
 			});
 			// Customers.findOne({'id_customer': req.user.id_customer}, function (err, customer){
 			// 	console.log('lala',customer);

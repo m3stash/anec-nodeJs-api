@@ -15,21 +15,13 @@ global._ = require('underscore');
 
 //mongo connect ================================================================
 var options = {
-  // db: { native_parser: true },
   server: { poolSize: 1 },
-  // replset: { rs_name: 'myReplicaSetName' },
-  // user: 'myUserName',
-  // pass: 'myPassword'
 }
 mongoose.connect('localhost:27017/db', options); // connect to our database
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection db error:'));
 db.once('open', function (callback) {
 	console.log('connection db ok')
-	// mongoose.connection.close(function () {
-	//   console.log('Mongoose disconnected on app termination');
-	//   process.exit(0);
-	// });
 });
 
 //passport config ===============================================================

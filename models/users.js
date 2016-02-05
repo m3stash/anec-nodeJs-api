@@ -1,11 +1,13 @@
 var mongoose = require('mongoose');
 var UsersSchema = new mongoose.Schema({
+  superUser: Boolean,
+  userAdmin: Boolean,
   id: String,
   id_customer: String,
   login : String,
   pwd : String,
   token : {
-    expire : Number,
+    expire : Date,
     token : String,
   },
   firstName : String,
