@@ -11,6 +11,8 @@ module.exports = function(passport, twt) {
       }
       Users.findOne({'token.token' : token}, function(err, user) {
         //verify if the date of token is passed
+        console.log('xxxx',user.token.expire);
+        
         var tokenNotExpired = (new Date(user.token.expire).getTime() > new Date().getTime());
         if (err) {
           return cb(err);

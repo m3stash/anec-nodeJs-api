@@ -37,6 +37,7 @@ require('./routers/routes')(app, passport, jwt);
 
 // start serveur ===============================================================
 app.listen(9999);
-app.on('disconnect', function() {
-    console.log("disconnect");
+
+process.on('exit', (code) => {
+  console.log('-------About to exit with code:', code);
 });

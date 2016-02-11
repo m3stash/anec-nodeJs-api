@@ -1,7 +1,8 @@
 {
-  "name": "api-excange",
+  "name": "api-exchange",
   "author": "duchaussoy laurent",
   "version": "0.0.1",
+  "private": true,
   "repository": {},
   "dependencies": {
     "grunt": "latest",
@@ -9,7 +10,7 @@
     "grunt-contrib-jshint": "latest",
     "grunt-contrib-watch": "latest",
     "mongoose": "latest",
-    "express" : "latest",
+    "express" : ">=4",
     "morgan" : "latest",
     "url": "latest",
     "body-parser": "latest",
@@ -20,6 +21,6 @@
     "underscore": "latest"
   },
   "engines": {
-    "node": "node >= 5.0.0"
+    "node": ">5.0.0"
   }
 }
