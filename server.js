@@ -34,6 +34,8 @@ app.use(cookieParser()); // read cookies
 
 // routes app ==================================================================
 require('./routers/routes')(app, passport, jwt);
+require('./routers/routes-modules-type')(app, passport, jwt);
+require('./routers/routes-customers')(app, passport, jwt);
 
 // start serveur ===============================================================
 app.listen(9999);
